@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Site Foda</title>
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+  <script src="https://unpkg.com/wavesurfer.js"></script>
+  <script src="https://kit.fontawesome.com/4a47e623a7.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/hover.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style type="text/css">
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+    }
+
+    .container{
+      display: flow-root;
+    }
+
+    .left-wrap{
+      width: 50%;
+      height: auto;
+      float: left;
+    }
+
+    .right-wrap{
+      width: 50%;
+      height: auto;
+      float: right;
+      overflow: auto;
+    }
+    
+    .at-wrap {
+      width: 50vw;
+      height: 80vh;
+      margin: 0 auto;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .video-wrap{
+      width: 100%;
+      height: auto;
+      overflow: auto;
+      float: left;
+      clear: left;
+    }
+  
+    .audio-wrap{
+      width: 100%;
+      height: auto;
+      overflow: auto;
+      float: left;
+      clear: left;
+    }
+
+    .button-wrap{
+      width: 100%;
+      height: auto;
+      overflow: auto;
+      float: left;
+      clear: left;
+    }
+
+    .file-wrap{
+      width: 100%;
+      height: auto;
+      overflow: auto;
+      float: left;
+      clear: left;
+    }
+    
+    .at-content {
+      position: relative;
+      overflow: hidden;
+      flex: 1 1 auto;
+    }
+    
+    /** Sidebar **/
+    .at-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      max-width: 70px;
+      width: auto;
+      display: flex;
+      align-content: stretch;
+      z-index: 1001;
+      overflow: hidden;
+      border-right: 1px solid rgba(0, 0, 0, 0.12);
+      background: #f7f7f7;
+    }
+
+    .at-sidebar:hover {
+      max-width: 400px;
+      transition: max-width 0.2s;
+      overflow-y: auto;
+    }
+
+    .at-viewport {
+      overflow-y: auto;
+      position: absolute;
+      top: 0;
+      left: 70px;
+      right: 0;
+      bottom: 0;
+      padding-right: 20px;
+    }
+
+    .at-footer {
+      flex: 0 0 auto;
+      background: #436d9d;
+      color: #fff;
+    }
+
+    /** Overlay **/
+
+    .at-overlay {
+      /** Fill Parent */
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1002;
+
+      /* Blurry dark shade */
+      backdrop-filter: blur(3px);
+      background: rgba(0, 0, 0, 0.5);
+
+      /** center content */
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .at-overlay-content {
+      /* white box with drop-shadow */
+      margin-top: 20px;
+      background: #fff;
+      box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.3);
+      padding: 10px;
+    }
+
+    /** Track selector **/
+    .at-track {
+      display: flex;
+      position: relative;
+      padding: 5px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .at-track:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .at-track>.at-track-icon,
+    .at-track>.at-track-details {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .at-track>.at-track-icon {
+      flex-shrink: 0;
+      font-size: 32px;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      width: 64px;
+      height: 64px;
+      margin-right: 5px;
+      align-items: center;
+    }
+
+    .at-track-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .at-track:hover>.at-track-icon {
+      opacity: 0.8;
+    }
+
+    .at-track.active {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .at-track.active>.at-track-icon {
+      color: #4972a1;
+      opacity: 1;
+    }
+
+    .at-track>.at-track-name {
+      font-weight: 500;
+    }
+
+    /** Footer **/
+    .at-controls {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      background: #436d9d;
+      color: #fff;
+    }
+
+    .at-controls>div {
+      display: flex;
+      justify-content: flex-start;
+      align-content: center;
+      align-items: center;
+    }
+
+    .at-controls>div>* {
+      display: flex;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 4px;
+      margin: 0 3px;
+    }
+
+    .at-controls .btn {
+      color: #fff;
+      border-radius: 0;
+      height: 40px;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+
+    .at-controls .btn.disabled {
+      cursor: progress;
+      opacity: 0.5;
+    }
+
+    .at-controls a.active {
+      background: #5588c7;
+      text-decoration: none;
+    }
+
+    .at-controls .btn i {
+      vertical-align: top;
+    }
+
+    .at-controls select {
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      appearance: none;
+      border: none;
+      width: 100%;
+      height: 40px;
+      background: #436d9d;
+      padding: 4px 10px;
+      color: #fff;
+      font-size: 16px;
+      text-align-last: center;
+      text-align: center;
+      -ms-text-align-last: center;
+      -moz-text-align-last: center;
+      cursor: pointer;
+    }
+
+    .at-song-title {
+      font-weight: bold;
+    }
+
+    .at-cursor-bar {
+      /* Defines the color of the bar background when a bar is played */
+      background: rgba(255, 242, 0, 0.25);
+    }
+
+    .at-selection div {
+      /* Defines the color of the selection background */
+      background: rgba(64, 64, 255, 0.1);
+    }
+
+    .at-cursor-beat {
+      /* Defines the beat cursor */
+      background: rgba(64, 64, 255, 0.75);
+      width: 3px;
+    }
+
+    .at-highlight * {
+      /* Defines the color of the music symbols when they are being played (svg) */
+      fill: #0078ff;
+      stroke: #0078ff;
+    }
+
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="left-wrap">
+
+      <div class="video-wrap">
+        <video id="theVideo" controls width="100%"></video>
+        </video>
+      </div>
+    </div>
+
+    <div class="right-wrap">
+      <div class="at-wrap">
+        <div class="at-overlay">
+          <div class="at-overlay-content">
+            Music sheet is loading
+          </div>
+        </div>
+        <div class="at-content">
+          <div class="at-viewport">
+            <div class="at-main"></div>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    const sb = supabase.createClient('https://kmvkcftembtxisodsfih.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttdmtjZnRlbWJ0eGlzb2RzZmloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ4ODAzMTEsImV4cCI6MjAzMDQ1NjMxMX0.FIezOyJzdZh57tbsLtujH8rTzW9vb2efOmGvmgz45G8');
+
+
+    var tabFile;
+    var vidFile;
+    var querystring = window.location.search;
+    var params = new URLSearchParams(querystring);
+
+    let myVideo = document.getElementById("theVideo");
+
+    var theInterval;
+    var compasses;
+    var pauseStamps;
+
+    myVideo.addEventListener("play", () => {
+      api.playbackSpeed = findPlaybackSpeed();
+      theInterval = setInterval(() => {
+        let val = findVideoStamp();
+        if(previousStamp !== val && api.playbackRange === null && !shouldLoop){
+          api.tickPosition = tickStamps[previousStamp];
+          val = findVideoStamp();
+        }
+        if (!pauseStamps.includes(val) && val !== 0){
+          api.play();
+        }
+        else{
+          api.pause();
+        }
+        previousStamp = val;
+      }, 100);
+    });
+
+    var previousStamp = 0;
+    var wasPaused = false;
+
+    myVideo.addEventListener("pause", () => {
+      previousStamp = findVideoStamp();
+      clearInterval(theInterval);
+      api.pause();
+    });
+
+    var shouldLoop = false;
+
+    myVideo.addEventListener("seeked", () => {
+      previousStamp = findVideoStamp();
+      if (seekedByTab) {
+        seekedByTab = false;
+        return;
+      }
+      api.playbackRange = null;
+      api.playbackSpeed = 1;
+      var i = previousStamp;
+
+      api.tickPosition = i > 0 ? api.score.masterBars[i - 1].start : 0;
+      var percent = 0;
+      var temp = compasses.length;
+      if(i < temp){
+        percent = i > 0 ? (myVideo.currentTime * 1000 - compasses[i - 1]) / (compasses[i] - compasses[i - 1]) : 0;
+      }
+      else{
+        if(temp > 0){
+          var acm = compasses[temp - 1];
+          for(var j = temp; j < i; j++)
+            acm += expectedDuration[j];
+          percent = i > 0 ? (myVideo.currentTime * 1000 - acm) / (expectedDuration[i]) : 0;
+        }
+        else{
+          percent = i > 0 ? (myVideo.currentTime * 1000 - expectedStamps[i - 1]) / expectedDuration[i] : 0;
+        }
+      }
+      api.tickPosition += i > 0 ? percent * (api.score.masterBars[i].start - api.score.masterBars[i - 1].start) : 0;
+      seekedByVid = true;
+    });
+
+    function findPlaybackSpeed() {
+      var i = findVideoStamp();
+      if (i < compasses.length && i > 0) {
+        return (expectedDuration[i - 1] / (compasses[i] - compasses[i - 1])) * myVideo.playbackRate;
+      }
+      else {
+        return myVideo.playbackRate;
+      }
+    }
+
+    function findVideoStamp() {
+      var time = 0;
+      for (var i = 0; i < compasses.length; i++) {
+        if (compasses[i] > myVideo.currentTime * 1000)
+          return i;
+      }
+      if(compasses.length > 0)
+        time = compasses[compasses.length - 1];
+      for (var i = compasses.length; i < expectedStamps.length; i++) {
+        time += expectedDuration[i];
+        if (time > myVideo.currentTime * 1000){
+          return compasses.length > 0 ? i : i + 1;
+        }
+      }
+      return -1;
+    }
+
+    const wrapper = document.querySelector(".at-wrap");
+    const main = wrapper.querySelector(".at-main");
+
+    const entries = Array.from(params.entries());
+
+    async function loadAll(){
+        var info = await sb.from('tabs').select().eq(entries[0][0], parseInt(entries[0][1]));
+        var tabDownload = await sb.storage.from('tabs').getPublicUrl(info.data[0].tabName);
+        var vidDownload = await sb.storage.from('videos').getPublicUrl(info.data[0].vidName);
+        console.log(vidDownload);
+        console.log(tabDownload);
+        console.log(info);
+        compasses = info.data[0].compasses;
+        pauseStamps = info.data[0].pauseStamps;
+        myVideo.src = vidDownload.data.publicUrl;
+        api.load(tabDownload.data.publicUrl);
+    }
+
+    var settings = {
+      file: '',
+      player: {
+        enablePlayer: true,
+        soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
+        scrollElement: wrapper.querySelector('.at-viewport')
+      },
+    };
+    var api = new alphaTab.AlphaTabApi(main, settings);
+
+    api.playedBeatChanged.on((args) => {
+      api.playbackSpeed = findPlaybackSpeed();
+    });
+
+    const overlay = wrapper.querySelector(".at-overlay");
+    api.renderStarted.on(() => {
+      overlay.style.display = "flex";
+    });
+    api.renderFinished.on(() => {
+      overlay.style.display = "none";
+    });
+
+    api.postRenderFinished.on(() => {
+      api.changeTrackVolume(api.score.tracks, 0);
+      if (typeof stm !== undefined) {
+        expectedDuration = new Array(api.tracks[0].staves[0].bars.length);
+        expectedStamps = new Array(api.tracks[0].staves[0].bars.length + 1);
+        tickStamps = new Array(api.tickCache.masterBars.length);
+        tickDuration = new Array(api.tickCache.masterBars.length);
+        for (var i = 0; i < api.tickCache.masterBars.length; i++) {
+          tickStamps[i] = api.tickCache.masterBars[i].start;
+          tickDuration[i] = api.tickCache.masterBars[i].end - api.tickCache.masterBars[i].start;
+        }
+        for (var i = 0; i < expectedDuration.length; i++) {
+          expectedDuration[i] = 0;
+        }
+        for (var i = 0; i < expectedStamps.length; i++) {
+          expectedStamps[i] = 0;
+        }
+        var seekingBeat = api.tickCache.findBeat(api.tracks, 0);
+        while (seekingBeat != null) {
+          var currentIndex = seekingBeat.currentBeatLookup.masterBar.masterBar.index;
+          expectedDuration[currentIndex] += seekingBeat.duration;
+          seekingBeat = api.tickCache.findBeat(api.tracks, seekingBeat.currentBeatLookup.end);
+        }
+        for (var i = 0; i < expectedDuration.length; i++) {
+          expectedStamps[i + 1] = expectedDuration[i];
+          expectedStamps[i + 1] += expectedStamps[i];
+        }
+      }
+      previousStamp = findVideoStamp();
+    });
+
+    var expectedDuration;
+    var expectedStamps;
+    var tickStamps;
+
+    var seekedByTab = false;
+    var seekedByVid = false;
+
+    api.playbackRangeChanged.on((e) => {
+      shouldLoop = api.playbackRange !== null;
+      if (seekedByVid) {
+        seekedByVid = false;
+      }
+      else {
+        setVideoTimeToMatchTab();
+      }
+    });
+
+    function setVideoTimeToMatchTab() {
+      seekedByTab = true;
+      var i = api.tickCache.findMasterBar(api.tickPosition).masterBar.index;
+      var percent = (api.tickPosition - tickStamps[i]) / tickDuration[i];
+      var temp = compasses.length;
+      if (i + 1 < temp) {
+        myVideo.currentTime = compasses[i] / 1000;
+        myVideo.currentTime += percent * (compasses[i + 1] - compasses[i]) / 1000;
+      }
+      else if (i + 1 == temp) {
+        myVideo.currentTime = compasses[i] / 1000;
+        myVideo.currentTime += percent * expectedDuration[i] / 1000;
+      }
+      else if (temp > 0){
+        var j = temp;
+        var acm = compasses[temp - 1];
+        while(j <= i){
+          acm += expectedDuration[j];
+          j++;
+        }
+        myVideo.currentTime = acm / 1000;
+        myVideo.currentTime += percent * expectedDuration[i] / 1000;
+      }
+      else{
+        myVideo.currentTime = expectedStamps[i] / 1000;
+        myVideo.currentTime += percent * expectedDuration[i] / 1000;
+      }
+      previousStamp = i;
+    }
+
+    api.playerStateChanged.on((e) => {
+      if (e.state == 0 && e.stopped) {
+        setVideoTimeToMatchTab();
+        if (!shouldLoop) {
+          myVideo.pause();
+          return;
+        }
+        api.tickPosition = api.playbackRange.startTick;
+        api.play();
+      }
+    });
+
+    loadAll();
+
+  </script>
+</body>
+
+</html>
