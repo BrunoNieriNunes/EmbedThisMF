@@ -356,7 +356,7 @@
           if (val === expectedDuration.length + 1) {
             api.tickPosition = tickStamps[tickStamps.length - 1] + tickDuration[tickDuration.length - 1] - 5;
           }
-          else if (previousStamp !== val && api.playbackRange === null && !shouldLoop) {
+          else if (previousStamp !== val) {
             api.tickPosition = tickStamps[previousStamp];
           }
           if (!pauseStamps.includes(val) && val > 0 && val <= expectedDuration.length && api.tickCache.findBeat(api.tracks, api.tickPosition).nextBeatLookup !== null) {
