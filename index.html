@@ -347,6 +347,7 @@
     });
 
     myVideo.addEventListener("play", () => {
+      wasPlaying = true;
       api.playbackSpeed = findPlaybackSpeed();
       theInterval = setInterval(() => {
         let val = findVideoStamp();
@@ -378,7 +379,7 @@
     myVideo.addEventListener("seeked", () => {
       previousStamp = findVideoStamp();
       if (seekedByTab) {
-        if(shouldLoop){
+        if(shouldLoop && wasPlaying){
           myVideo.play();
           api.play();
         }
@@ -511,9 +512,12 @@
 
     var seekedByTab = false;
     var seekedByVid = false;
+    var wasPlaying = false;
 
     api.playbackRangeChanged.on((e) => {
       shouldLoop = api.playbackRange !== null;
+      wasPlaying = !myVideo.paused;
+      console.log(wasPlaying);
       myVideo.pause();
       api.pause();
       if (seekedByVid) {
