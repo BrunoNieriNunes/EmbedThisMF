@@ -329,7 +329,6 @@
   <script type="text/javascript">
     const sb = supabase.createClient('https://kmvkcftembtxisodsfih.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttdmtjZnRlbWJ0eGlzb2RzZmloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ4ODAzMTEsImV4cCI6MjAzMDQ1NjMxMX0.FIezOyJzdZh57tbsLtujH8rTzW9vb2efOmGvmgz45G8');
 
-
     var tabFile;
     var vidFile;
     var querystring = window.location.search;
@@ -340,6 +339,12 @@
     var theInterval;
     var compasses;
     var pauseStamps;
+
+    document.addEventListener('keypress', (e) => {
+      if (e.keyCode == 32) {
+        myVideo.paused ? myVideo.play() : myVideo.pause();
+      }
+    });
 
     myVideo.addEventListener("play", () => {
       api.playbackSpeed = findPlaybackSpeed();
@@ -373,6 +378,10 @@
     myVideo.addEventListener("seeked", () => {
       previousStamp = findVideoStamp();
       if (seekedByTab) {
+        if(shouldLoop){
+          myVideo.play();
+          api.play();
+        }
         seekedByTab = false;
         return;
       }
@@ -437,9 +446,6 @@
         var info = await sb.from('tabs').select().eq(entries[0][0], parseInt(entries[0][1]));
         var tabDownload = await sb.storage.from('tabs').getPublicUrl(info.data[0].tabName);
         var vidDownload = await sb.storage.from('videos').getPublicUrl(info.data[0].vidName);
-        console.log(vidDownload);
-        console.log(tabDownload);
-        console.log(info);
         compasses = info.data[0].compasses;
         pauseStamps = info.data[0].pauseStamps;
         myVideo.src = vidDownload.data.publicUrl;
@@ -508,6 +514,8 @@
 
     api.playbackRangeChanged.on((e) => {
       shouldLoop = api.playbackRange !== null;
+      myVideo.pause();
+      api.pause();
       if (seekedByVid) {
         seekedByVid = false;
       }
@@ -548,13 +556,12 @@
 
     api.playerStateChanged.on((e) => {
       if (e.state == 0 && e.stopped) {
+        myVideo.pause();
         setVideoTimeToMatchTab();
         if (!shouldLoop) {
-          myVideo.pause();
           return;
         }
         api.tickPosition = api.playbackRange.startTick;
-        api.play();
       }
     });
 
