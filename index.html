@@ -517,7 +517,6 @@
     api.playbackRangeChanged.on((e) => {
       shouldLoop = api.playbackRange !== null;
       wasPlaying = !myVideo.paused;
-      console.log(wasPlaying);
       myVideo.pause();
       api.pause();
       if (seekedByVid) {
