@@ -529,7 +529,7 @@
           }
         }
         previousStamp = findVideoStamp();
-        endCompass = (compasses.length >= expectedStamps.length ? compasses[compasses.length - 1] : expectedStamps[expectedStamps.length - 1]) + expectedDuration[expectedDuration.length - 1];
+        endCompass = compasses[compasses.length - 1] + expectedDuration[expectedDuration.length - 1];
       });
 
       var expectedDuration;
